@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeonelB Scan PWA</title>
+    <style>
+        /* CSS Integrado */
+        body { background: #0e0e0e; color: #00ff00; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        #scanner-canvas { border: 2px solid #00ff00; border-radius: 50%; box-shadow: 0 0 20px #00ff00; margin-bottom: 20px; }
+        .upload-btn { background: #00ff00; color: #000; padding: 10px 20px; cursor: pointer; font-weight: bold; border: none; }
+        #status { margin-top: 15px; font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+
+    <h1>LEONELB2840 SECURITY</h1>
+    <canvas id="scanner-canvas" width="300" height="300"></canvas>
+    
+    <input type="file" id="fileInput" hidden>
+    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">SELECCIONAR ARCHIVO</button>
+    
+    <div id="status">Esperando archivo...</div>
+
+    <script>
+        // Lógica de Canvas (Radar de escaneo)
+        const canvas = document.getElementById('scanner-canvas');
+        const ctx = canvas.getContext('2d');
+        let angle = 0;
+
+        function drawRadar() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            ctx.arc(150, 150, 140, 0, Math.PI * 2);
+            ctx.strokeStyle = '#00ff00';
+            ctx.stroke();
+
+            // Línea giratoria
+            ctx.save();
+            ctx.translate(150, 150);
+            ctx.rotate(angle);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(140, 0);
+            ctx.stroke();
+            ctx.restore();
+
+            angle += 0.05;
+            requestAnimationFrame(drawRadar);
+        }
+        drawRadar();
+
+        // Lógica de JS para enviar al servidor
+        document.getElementById('fileInput').onchange = async (e) => {
+            const file = e.target.files[0];
+            document.getElementById('status').innerText = `Analizando: ${file.name}...`;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/scan', { method: 'POST', body: formData });
+                const result = await response.json();
+                document.getElementById('status').innerText = `Resultado: ${result.veredicto}`;
+            } catch (err) {
+                document.getElementById('status').innerText = "Error conectando con el motor.";
+            }
+        };
+    </script>
+</body>
+</html>
